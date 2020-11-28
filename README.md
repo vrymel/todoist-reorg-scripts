@@ -1,0 +1,1 @@
+Globally installed todoist-python
