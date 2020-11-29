@@ -1,17 +1,34 @@
 import todoist
 from datetime import datetime
+import json
 
-api = todoist.TodoistAPI('')
+api = todoist.TodoistAPI('68df7a8351bb221682350ce1f745eb2c86471ac7')
+api.reset_state()
+response = api.sync()
+
 
 # todo: get projects and store ID
+def get_sync_token():
+    store_file = open('store.json', 'r')
 
-def get_todays_tasks(email, password):
+    contents = store_file.read()
+    store_file.close()
+
+    store = json.loads(contents)
+
+    if 'sync_token' in store:
+        return store['sync_token']
+
+    return None
+
+
+def get_todays_tasks():
     """
     Get tasks due on the current utc day
     :return: list of task dicts
     """
     # user = api.user.login(email, password)
-    api.user.login(email, password)
+    api.user.login()
     tasks_today = []
 
     # Sync (load) data
@@ -36,4 +53,19 @@ def get_todays_tasks(email, password):
 
     return tasks_today
 
-get_todays_tasks()
+
+def get_project(project_name):
+
+    projects = response['projects']
+
+    for p in projects:
+        if p['name'] == project_name:
+            return p
+
+    return None
+
+
+
+project = get_project('PSE Lookup')
+if project:
+    pass
