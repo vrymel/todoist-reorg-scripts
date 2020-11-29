@@ -1,62 +1,22 @@
 import todoist
-from datetime import datetime
-import json
 
 api = todoist.TodoistAPI('68df7a8351bb221682350ce1f745eb2c86471ac7')
 api.reset_state()
-response = api.sync()
+todoist_data = api.sync()
 
 
-# todo: get projects and store ID
-def get_sync_token():
-    store_file = open('store.json', 'r')
+def get_project_tasks(project):
+    project_tasks = []
 
-    contents = store_file.read()
-    store_file.close()
+    for item in todoist_data['items']:
+        if item['project_id'] == project['id']:
+            project_tasks.append(item)
 
-    store = json.loads(contents)
-
-    if 'sync_token' in store:
-        return store['sync_token']
-
-    return None
-
-
-def get_todays_tasks():
-    """
-    Get tasks due on the current utc day
-    :return: list of task dicts
-    """
-    # user = api.user.login(email, password)
-    api.user.login()
-    tasks_today = []
-
-    # Sync (load) data
-    response = api.sync()
-
-    # Get "today", only keep Day XX Mon, which Todoist uses
-    today = datetime.utcnow().strftime("%a %d %b")
-
-    for item in response['items']:
-        # item['project_id']
-        # item['priority']
-        due = item['due_date_utc']
-
-        # todo: only get items from input project
-        # todo: only get items with priority
-        # todo: demote old task P1
-
-        if due:
-            # Slicing :10 gives us the relevant parts
-            if due[:10] == today:
-                tasks_today.append(item)
-
-    return tasks_today
+    return project_tasks
 
 
 def get_project(project_name):
-
-    projects = response['projects']
+    projects = todoist_data['projects']
 
     for p in projects:
         if p['name'] == project_name:
@@ -65,7 +25,8 @@ def get_project(project_name):
     return None
 
 
-
+# todo: pass project name as argument from Alfred
 project = get_project('PSE Lookup')
-if project:
+tasks = get_project_tasks(project)
+if tasks:
     pass
