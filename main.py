@@ -1,14 +1,6 @@
 import os
 import todoist
 
-api = todoist.TodoistAPI(os.environ.get('TOKEN'))
-api.reset_state()
-todoist_data = api.sync()
-
-if 'error_tag' in todoist_data:
-    print('Could not get data from Todoist: ' + todoist_data['error_tag'])
-    exit(1)
-
 # P1 is actually priority 4 in the API
 # P2 is actually priority 3 in the API
 PRIORITY_MAP = {
@@ -17,9 +9,7 @@ PRIORITY_MAP = {
 }
 
 
-def get_project(project_name):
-    projects = todoist_data['projects']
-
+def get_project(project_name, projects):
     for p in projects:
         if p['name'] == project_name:
             return p
@@ -97,8 +87,16 @@ def complete_current_p1_item(items):
     promote_p2_to_p1_item(items)
 
 
+api = todoist.TodoistAPI(os.environ.get('TOKEN'))
+api.reset_state()
+todoist_data = api.sync()
+
+if 'error_tag' in todoist_data:
+    print('Could not get data from Todoist: ' + todoist_data['error_tag'])
+    exit(1)
+
 # todo: pass project name as argument from Alfred
-target_project = get_project('Concentrix')
+target_project = get_project('Concentrix', todoist_data['projects'])
 tasks = get_project_items(target_project, todoist_data['items'])
 # force_one_p1_item(tasks)
 # promote_p2_to_p1_item(tasks)
