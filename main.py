@@ -27,17 +27,17 @@ def get_project(project_name):
     return None
 
 
-def get_project_items(project):
+def get_project_items(project, items):
     project_tasks = []
 
-    for item in todoist_data['items']:
+    for item in items:
         if item['project_id'] == project['id']:
             project_tasks.append(item)
 
     return project_tasks
 
 
-def purge_other_p1_items(items):
+def force_one_p1_item(items):
     p1_tasks = []
 
     for item in items:
@@ -65,11 +65,25 @@ def promote_p2_to_p1_item(items):
     if latest_p2_item:
         item_model = api.items.get_by_id(latest_p2_item['id'])
         item_model.update(priority=PRIORITY_MAP['1'])
-        ret = api.commit()
+        api.commit()
 
+
+def replace_p1_item(item_description, project):
+    api.items.add(item_description, project_id=project['id'], priority=PRIORITY_MAP['1'])
+    api.commit()
+
+    api.reset_state()
+    data = api.sync()
+
+    items = get_project_items(project, data['items'])
+    force_one_p1_item(items)
+
+
+# todo: complete p1 task - automatically promotes latest p2 to p1
 
 # todo: pass project name as argument from Alfred
 target_project = get_project('Concentrix')
-tasks = get_project_items(target_project)
-# purge_other_p1_items(tasks)
+tasks = get_project_items(target_project, todoist_data['items'])
+# force_one_p1_item(tasks)
 # promote_p2_to_p1_item(tasks)
+replace_p1_item('test new p1.2 task', target_project)
